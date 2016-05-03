@@ -2,6 +2,8 @@
 
 Builds a ubuntu based docker container for Sauce Labs' Sauce Connect.
 
+Image hosted at https://hub.docker.com/r/mehmetg/sauce-connect/
+
 ### TODO:
 
 * Add command line to start SC.
