@@ -1,6 +1,6 @@
 from __future__ import print_function
 from platform import system, architecture
-from sys import stdout, stderr, argv
+from sys import stderr, argv
 from os import getcwd, path
 
 import requests
@@ -68,13 +68,14 @@ def download_file(url):
     return local_filename, sha1.hexdigest()
 
 
-def sha1_of_file(filepath):
+def sha1_of_file(file_path):
     import hashlib
     sha = hashlib.sha1()
-    with open(filepath, 'rb') as f:
+    with open(file_path, 'rb') as f:
         while True:
             block = f.read(2**10)
-            if not block: break
+            if not block:
+                break
             sha.update(block)
         return sha.hexdigest()
 
@@ -100,8 +101,8 @@ def decompress_file(filename):
             tar.extractall()
     elif filename.endswith(".zip"):
         import zipfile
-        with zipfile.ZipFile(filename, "r") as zip:
-            zip.extractall()
+        with zipfile.ZipFile(filename, "r") as zip_file:
+            zip_file.extractall()
     sc_dirs = get_sc_folders()
     if sc_dirs:
         return sc_dirs[0]
@@ -131,7 +132,7 @@ def write_to_json(filename, d):
 def write_to_env_bash(filename, d):
     template = 'export %s=\"%s\"\n'
     with open(filename, "w") as cfg:
-        for key, value in d.iteritems():
+        for key, value in d.items():
             cfg.write(template % (key, value))
 
 
@@ -147,7 +148,7 @@ def main(sc_dst):
 
 if __name__ == '__main__':
     if len(argv) > 1:
-        sc_dst = argv[1]
+        sc_folder = argv[1]
     else:
-        sc_dst = "sc"
-    main(sc_dst)
+        sc_folder = "sc"
+    main(sc_folder)
