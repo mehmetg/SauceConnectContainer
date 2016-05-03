@@ -1,7 +1,7 @@
 from __future__ import print_function
-from platform import uname, system, architecture
+from platform import system, architecture
 from sys import stdout, stderr
-from os import listdir, getcwd, path
+from os import getcwd, path
 
 import requests
 
@@ -12,8 +12,6 @@ SHA1 = "sha1"
 
 
 def get_sc_key():
-    #print(uname(), file=stdout)
-    #print(architecture(), file=stdout)
     host_system = system().lower()
     host_arch = architecture()[0].lower()
     if host_system == "darwin":
@@ -37,7 +35,6 @@ def get_sc_latest_url():
         try:
             url = res.json()[SC_MAIN_KEY][key][DOWNLOAD_URL]
             sha1 = res.json()[SC_MAIN_KEY][key][SHA1]
-            #print((url, sha1),  file=stdout)
         except Exception as e:
             print("Response was: " + str(res.json()), file=stderr)
             print(e.message, file=stderr)
@@ -96,6 +93,7 @@ def update_sc():
 
 
 def decompress_file(filename):
+    cleanup_sc_folders()
     if filename.endswith(".tar.gz"):
         import tarfile
         with tarfile.open(filename, "r:gz") as tar:
@@ -104,11 +102,47 @@ def decompress_file(filename):
         import zipfile
         with zipfile.ZipFile(filename, "r") as zip:
             zip.extractall()
+    sc_dirs = get_sc_folders()
+    if sc_dirs:
+        return sc_dirs[0]
+    else:
+        return None
+
+
+def get_sc_folders():
+    from glob import glob
+    sc_files = glob(path.join(getcwd(), "sc-*"))
+    return [sc_file for sc_file in sc_files if path.isdir(sc_file)]
+
+
+def cleanup_sc_folders():
+    import shutil
+    sc_dirs = get_sc_folders()
+    for sc_dir in sc_dirs:
+        shutil.rmtree(sc_dir)
+
+
+def write_to_json(filename, d):
+    import json
+    with open(filename, "w") as cfg:
+        json.dump(d, cfg)
+
+
+def write_to_env_bash(filename, d):
+    template = 'export %s=\"%s\"\n'
+    with open(filename, "w") as cfg:
+        for key, value in d.iteritems():
+            cfg.write(template % (key, value))
 
 
 def main():
-    fileInfo = update_sc()
-    decompress_file(fileInfo[0])
+    file_info = update_sc()
+    sc_path = decompress_file(file_info[0])
+    d = dict()
+    d["SC_PATH"] = sc_path
+    d["ARCHIVE_NAME"] = file_info[0]
+    d["ARCHIVE_SHA1"] = file_info[1]
+    write_to_env_bash("sc.sh", d)
 
 if __name__ == '__main__':
     main()
