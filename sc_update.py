@@ -1,6 +1,6 @@
 from __future__ import print_function
 from platform import system, architecture
-from sys import stdout, stderr
+from sys import stdout, stderr, argv
 from os import getcwd, path
 
 import requests
@@ -135,14 +135,19 @@ def write_to_env_bash(filename, d):
             cfg.write(template % (key, value))
 
 
-def main():
-    file_info = update_sc()
-    sc_path = decompress_file(file_info[0])
-    d = dict()
-    d["SC_PATH"] = sc_path
-    d["ARCHIVE_NAME"] = file_info[0]
-    d["ARCHIVE_SHA1"] = file_info[1]
-    write_to_env_bash("sc.sh", d)
+def move_folder(src, dst):
+    import shutil
+    shutil.move(src, dst)
+
+
+def main(sc_dst):
+    sc_dir = decompress_file(update_sc()[0])
+    move_folder(sc_dir, sc_dst)
+
 
 if __name__ == '__main__':
-    main()
+    if len(argv) > 1:
+        sc_dst = argv[1]
+    else:
+        sc_dst = "sc"
+    main(sc_dst)
